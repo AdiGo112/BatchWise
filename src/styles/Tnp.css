@@ -1,0 +1,195 @@
+/* The TnP dashboard shipped with no stylesheet at all -- five of the fifteen
+   demo accounts landed on a completely unstyled page. */
+
+.tnp-shell { min-height: 100vh; background: var(--bg-primary); }
+
+.tnp-dashboard {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+.tnp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.tnp-header h1 { font-size: 26px; }
+.tnp-header-actions { display: flex; gap: 8px; }
+
+/* ---------- Stats ---------- */
+.tnp-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.tnp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+}
+.tnp-stat-value { font-size: 28px; font-weight: 700; color: var(--accent-blue); }
+.tnp-stat-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; }
+
+/* ---------- Controls ---------- */
+.tnp-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+}
+.tnp-controls select {
+  padding: 9px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font: inherit;
+}
+.tnp-filters { display: flex; gap: 6px; }
+.tnp-filters .filter-btn { flex: none; }
+.tnp-controls .btn-primary { margin-left: auto; }
+
+/* ---------- Job cards ---------- */
+.job-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.job-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--accent-blue);
+  border-radius: var(--radius);
+}
+.job-card.completed { border-left-color: var(--pin-color); }
+
+.job-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.job-card-header h3 { font-size: 17px; }
+
+.job-status {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.job-status.active { background: var(--chip-blue); color: var(--accent-blue); }
+.job-status.completed { background: var(--chip-green); color: var(--faculty-color); }
+
+.job-role { font-weight: 600; }
+.job-req, .job-posted { font-size: 12px; color: var(--text-secondary); }
+
+.placed-section {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+.placed-section h4 { font-size: 13px; margin-bottom: 8px; }
+.placed-row { padding: 8px 0; border-bottom: 1px solid var(--border-light); }
+.placed-row:last-child { border-bottom: 0; }
+.placed-name { font-weight: 600; font-size: 13px; }
+.placed-package {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--chip-green);
+  color: var(--faculty-color);
+  font-size: 11px;
+  font-weight: 700;
+}
+.placed-exp { font-size: 12px; color: var(--text-secondary); font-style: italic; margin-top: 4px; }
+
+.job-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 10px; }
+.job-actions .btn-ghost { flex: 1; font-size: 13px; padding: 7px 12px; }
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, .55);
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+.modal-header h2 { font-size: 18px; }
+.modal-close {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.modal-close:hover { background: var(--bg-hover); }
+
+.modal-body { display: flex; flex-direction: column; gap: 4px; padding: 20px; }
+.modal-body label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 10px;
+}
+.modal-body label:first-child { margin-top: 0; }
+.modal-body input,
+.modal-body select {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+@media (max-width: 560px) {
+  .tnp-controls .btn-primary { margin-left: 0; width: 100%; }
+  .job-grid { grid-template-columns: 1fr; }
+}

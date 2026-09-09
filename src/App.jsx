@@ -7,25 +7,23 @@ import TnpDashboard from "./pages/tnp/TnpDashboard"
 export default function App() {
   const { user } = useAuth()
 
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        {/* Remember where they were headed so login can send them back. */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    )
+  }
+
   return (
     <Routes>
-      {/* PUBLIC ROUTE */}
+      <Route path="/login" element={<Navigate to="/" replace />} />
       <Route
-        path="/login"
-        element={!user ? <Login /> : <Navigate to="/" />}
+        path="/*"
+        element={user.accountType === "tnp" ? <TnpDashboard /> : <Layout />}
       />
-
-      {/* PROTECTED ROUTES */}
-      {user ? (
-        user.role === "tnp" ? (
-          <Route path="/*" element={<TnpDashboard />} />
-        ) : (
-          <Route path="/*" element={<Layout />} />
-        )
-      ) : (
-        // catch-all redirect to login
-        <Route path="*" element={<Navigate to="/login" />} />
-      )}
     </Routes>
   )
 }

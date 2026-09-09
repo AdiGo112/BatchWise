@@ -1,91 +1,90 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import PostCard from '../components/PostCard';
-import '../styles/Styles.css';
 
 const CompanyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getCompanyById, posts } = useApp();
+  const { getCompanyById, posts, sortPosts } = useApp();
   const [activeTab, setActiveTab] = useState('interview');
 
-  const company = getCompanyById(parseInt(id));
+  const company = getCompanyById(Number(id));
+
+  const groups = useMemo(() => {
+    if (!company) return { interview: [], discussions: [], all: [] };
+    const mine = posts.filter(p => p.companyId === company.id);
+    return {
+      all: sortPosts(mine, 'hot'),
+      interview: sortPosts(mine.filter(p => p.postType === 'Interview Experience'), 'hot'),
+      // The old "Resources" tab filtered on postType === 'Resource', a type no
+      // post has ever had, so it was permanently empty. Announcements are what
+      // actually shows up for a company.
+      announcements: sortPosts(mine.filter(p => p.postType === 'Announcement'), 'new'),
+      discussions: sortPosts(
+        mine.filter(p => p.postType === 'Question' || p.postType === 'Discussion'),
+        'hot'
+      )
+    };
+  }, [company, posts, sortPosts]);
 
   if (!company) {
     return (
-      <div className="company-detail-page">
-        <div className="not-found">
-          <h2>Company not found</h2>
-          <button onClick={() => navigate('/companies')}>View All Companies</button>
-        </div>
+      <div className="empty-state">
+        <div className="empty-state-icon">🏢</div>
+        <h2>Company not found</h2>
+        <button className="btn-primary" onClick={() => navigate('/companies')}>
+          View All Companies
+        </button>
       </div>
     );
   }
 
-  // Get all posts related to this company
-  const companyPosts = posts.filter(post => post.companyId === company.id);
+  const TABS = [
+    ['interview', 'Interview Experiences', groups.interview],
+    ['discussions', 'Discussions', groups.discussions],
+    ['announcements', 'Announcements', groups.announcements]
+  ];
 
-  // Filter posts by tab
-  const getFilteredPosts = () => {
-    switch (activeTab) {
-      case 'interview':
-        return companyPosts.filter(post => post.postType === 'Interview Experience');
-      case 'resources':
-        return companyPosts.filter(post => post.postType === 'Resource');
-      case 'discussions':
-        return companyPosts.filter(post => 
-          post.postType === 'Question' || post.postType === 'Discussion'
-        );
-      default:
-        return companyPosts;
-    }
-  };
-
-  const filteredPosts = getFilteredPosts();
+  const shown = TABS.find(([key]) => key === activeTab)?.[2] ?? [];
 
   return (
     <div className="company-detail-page">
-      <div className="company-header">
+      <div className="company-header card">
         <div className="company-logo-large">{company.logo}</div>
         <div className="company-info">
           <h1>{company.name}</h1>
-          <p className="company-stats">{company.threadCount} total threads</p>
+          {/* Was company.threadCount -- a hardcoded number that never matched
+              the posts actually on the page. */}
+          <p className="company-stats">{groups.all.length} threads on BatchWise</p>
         </div>
+        <Link to={`/create?company=${company.id}`} className="btn-primary compact">
+          + Share your experience
+        </Link>
       </div>
 
       <div className="company-tabs">
-        <button
-          className={`tab ${activeTab === 'interview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('interview')}
-        >
-          Interview Experiences
-        </button>
-        <button
-          className={`tab ${activeTab === 'resources' ? 'active' : ''}`}
-          onClick={() => setActiveTab('resources')}
-        >
-          Resources
-        </button>
-        <button
-          className={`tab ${activeTab === 'discussions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('discussions')}
-        >
-          Discussions
-        </button>
+        {TABS.map(([key, label, list]) => (
+          <button
+            key={key}
+            className={`tab ${activeTab === key ? 'active' : ''}`}
+            onClick={() => setActiveTab(key)}
+          >
+            {label} <span className="tab-count">{list.length}</span>
+          </button>
+        ))}
       </div>
 
-      <div className="company-content">
-        {filteredPosts.length === 0 ? (
-          <div className="no-posts">
-            <p>No {activeTab === 'interview' ? 'interview experiences' : activeTab} yet for this company.</p>
-          </div>
-        ) : (
-          filteredPosts.map(post => (
-            <PostCard key={post.id} post={post} />
-          ))
-        )}
-      </div>
+      {shown.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">📭</div>
+          <h2>Nothing here yet</h2>
+          <p>No posts about {company.name} in this category.</p>
+          <Link to={`/create?company=${company.id}`} className="btn-primary">Be the first</Link>
+        </div>
+      ) : (
+        shown.map(post => <PostCard key={post.id} post={post} />)
+      )}
     </div>
   );
 };

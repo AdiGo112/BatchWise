@@ -1,66 +1,83 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
-export default function AddJobModal({ setJobs, close }) {
+export default function AddJobModal({ setJobs, close, department, departments, postedBy }) {
   const [form, setForm] = useState({
     companyName: "",
     companyInfo: "",
     jd: "",
     requirements: "",
-    department: "Computer Engineering"
+    department: department ?? departments?.[0] ?? ""
   })
 
-  const submit = () => {
+  // Escape closes the modal; it could only be dismissed by the ✕ before.
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && close()
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [close])
+
+  const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }))
+
+  // Was unvalidated -- Submit with every field blank added an empty job card.
+  const canSubmit = form.companyName.trim() && form.jd.trim()
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (!canSubmit) return
     setJobs(prev => [
-      ...prev,
       {
         id: Date.now(),
         ...form,
+        companyName: form.companyName.trim(),
+        jd: form.jd.trim(),
         status: "active",
+        postedBy: postedBy ?? "TnP",
         placedStudents: []
-      }
+      },
+      ...prev
     ])
     close()
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-card">
-        {/* HEADER */}
+    <div className="modal-overlay" onClick={close} role="presentation">
+      <form
+        className="modal-card"
+        onClick={e => e.stopPropagation()}
+        onSubmit={submit}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add job"
+      >
         <div className="modal-header">
-          <h2>Add Job</h2>
-          <button className="modal-close" onClick={close}>
-            ✕
-          </button>
+          <h2>Add a placement drive</h2>
+          <button type="button" className="modal-close" onClick={close} aria-label="Close">✕</button>
         </div>
 
-        {/* FORM */}
-        <input
-          placeholder="Company Name"
-          onChange={e => setForm({ ...form, companyName: e.target.value })}
-        />
-        <input
-          placeholder="Company Info"
-          onChange={e => setForm({ ...form, companyInfo: e.target.value })}
-        />
-        <input
-          placeholder="Job Description"
-          onChange={e => setForm({ ...form, jd: e.target.value })}
-        />
-        <input
-          placeholder="Requirements"
-          onChange={e => setForm({ ...form, requirements: e.target.value })}
-        />
+        <div className="modal-body">
+          <label htmlFor="j-company">Company name *</label>
+          <input id="j-company" value={form.companyName} onChange={set("companyName")} autoFocus />
 
-        {/* ACTIONS */}
+          <label htmlFor="j-role">Role / job description *</label>
+          <input id="j-role" value={form.jd} onChange={set("jd")} placeholder="Frontend Developer" />
+
+          <label htmlFor="j-info">About the company</label>
+          <input id="j-info" value={form.companyInfo} onChange={set("companyInfo")} placeholder="Product-based MNC" />
+
+          <label htmlFor="j-req">Requirements</label>
+          <input id="j-req" value={form.requirements} onChange={set("requirements")} placeholder="React, JavaScript, DSA" />
+
+          <label htmlFor="j-dept">Department</label>
+          <select id="j-dept" value={form.department} onChange={set("department")}>
+            {(departments ?? [form.department]).map(d => <option key={d}>{d}</option>)}
+          </select>
+        </div>
+
         <div className="modal-actions">
-          <button className="btn-primary" onClick={submit}>
-            Submit
-          </button>
-          <button className="btn-secondary" onClick={close}>
-            Cancel
-          </button>
+          <button type="button" className="btn-ghost" onClick={close}>Cancel</button>
+          <button type="submit" className="btn-primary" disabled={!canSubmit}>Add drive</button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }

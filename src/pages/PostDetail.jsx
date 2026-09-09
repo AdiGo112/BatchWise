@@ -1,35 +1,39 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Comment from '../components/Comment';
-import '../styles/styles.css';
+import VoteBar from '../components/VoteBar';
+import { formatDate, timeAgo } from '../utils';
 
 const PostDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { 
-    getPostById, 
-    getUserById, 
-    getCommunityById, 
-    getCompanyById,
-    currentUser,
-    toggleUpvote,
-    addComment,
-    toggleBookmark,
-    bookmarkedPosts
+  const {
+    getPostById, getUserById, getCommunityById, getCompanyById,
+    currentUser, vote, addComment, toggleBookmark, bookmarkedPosts,
+    deletePost, score
   } = useApp();
 
   const [commentText, setCommentText] = useState('');
+  const [commentSort, setCommentSort] = useState('top');
 
   const post = getPostById(id);
 
+  const sortedComments = useMemo(() => {
+    if (!post) return [];
+    const list = [...post.comments];
+    return commentSort === 'new'
+      ? list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      : list.sort((a, b) => score(b) - score(a));
+  }, [post, commentSort, score]);
+
   if (!post) {
     return (
-      <div className="post-detail-page">
-        <div className="post-not-found">
-          <h2>Post not found</h2>
-          <button onClick={() => navigate('/')}>Go Home</button>
-        </div>
+      <div className="empty-state">
+        <div className="empty-state-icon">👻</div>
+        <h2>Post not found</h2>
+        <p>It may have been deleted.</p>
+        <button className="btn-primary" onClick={() => navigate('/')}>Go Home</button>
       </div>
     );
   }
@@ -37,72 +41,41 @@ const PostDetail = () => {
   const author = getUserById(post.authorId);
   const community = post.communityId ? getCommunityById(post.communityId) : null;
   const company = post.companyId ? getCompanyById(post.companyId) : null;
-  const hasUpvoted = post.upvotes.includes(currentUser.id);
   const isBookmarked = bookmarkedPosts.includes(post.id);
-
-  const handleUpvote = () => {
-    toggleUpvote(post.id);
-  };
+  const isMine = post.authorId === currentUser.id;
+  const commentCount = post.comments.reduce((n, c) => n + 1 + (c.replies?.length ?? 0), 0);
 
   const handleAddComment = (e) => {
     e.preventDefault();
-    if (commentText.trim()) {
-      addComment(post.id, commentText.trim());
-      setCommentText('');
+    if (!commentText.trim()) return;
+    addComment(post.id, commentText.trim());
+    setCommentText('');
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('Delete this post? This cannot be undone.')) {
+      deletePost(post.id);
+      navigate('/');
     }
-  };
-
-  const handleBookmark = () => {
-    toggleBookmark(post.id);
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   return (
     <div className="post-detail-page">
       <div className="post-detail-container">
-        <div className="post-detail-card">
-          {/* Vote section */}
-          <div className="post-vote-section">
-            <button 
-              className={`vote-btn upvote ${hasUpvoted ? 'active' : ''}`}
-              onClick={handleUpvote}
-              aria-label="Upvote"
-            >
-              ▲
-            </button>
-            <div className="vote-score">{post.upvotes.length}</div>
-            <button 
-              className="vote-btn downvote"
-              onClick={handleUpvote}
-              disabled={post.postType === 'Announcement'}
-              aria-label="Downvote"
-            >
-              ▼
-            </button>
-          </div>
+        <button className="back-link" onClick={() => navigate(-1)}>← Back</button>
 
-          {/* Post content */}
+        <div className="post-detail-card">
+          <VoteBar item={post} onVote={(dir) => vote(post.id, dir)} />
+
           <div className="post-detail-content">
             <div className="post-detail-header">
-              {post.isPinned && (
-                <span className="pinned-badge">📌 Pinned</span>
-              )}
-              <span className={`post-tag ${post.postType.toLowerCase().replace(' ', '-')}`}>
+              {post.isPinned && <span className="pinned-badge">📌 Pinned</span>}
+              <span className={`post-tag ${post.postType.toLowerCase().replace(/ /g, '-')}`}>
                 {post.postType}
               </span>
               {company && (
                 <Link to={`/company/${company.id}`} className="company-tag">
-                  {company.name}
+                  {company.logo} {company.name}
                 </Link>
               )}
               {community && (
@@ -115,65 +88,82 @@ const PostDetail = () => {
             <h1 className="post-detail-title">{post.title}</h1>
 
             <div className="post-detail-meta">
-              <span className="author-name">{author.name}</span>
-              <span className="author-role-badge" data-role={author.role.toLowerCase()}>
-                {author.role}
+              {author?.avatar && <img className="avatar-xs" src={author.avatar} alt="" />}
+              <Link to={`/profile/${post.authorId}`} className="author-name">
+                {author?.name ?? 'Unknown'}
+              </Link>
+              <span className="author-role-badge" data-role={author?.role?.toLowerCase()}>
+                {author?.role}
               </span>
-              {author.batch && (
-                <span className="author-batch">Batch {author.batch}</span>
-              )}
-              <span className="post-timestamp">{formatDate(post.createdAt)}</span>
+              {author?.batch && <span className="author-batch">Batch {author.batch}</span>}
+              <span className="post-timestamp" title={formatDate(post.createdAt)}>
+                {timeAgo(post.createdAt)}
+              </span>
             </div>
 
             <div className="post-detail-body">
-              {post.content.split('\n').map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
+              {post.content.split('\n').map((paragraph, index) =>
+                paragraph.trim()
+                  ? <p key={index}>{paragraph}</p>
+                  : <br key={index} />
+              )}
             </div>
 
             <div className="post-detail-actions">
               <div className="action-stats">
-                <span>{post.upvotes.length} upvotes</span>
-                <span>{post.comments.length} comments</span>
+                <span>{score(post)} points</span>
+                <span>{commentCount} comments</span>
               </div>
-              <button 
-                className={`bookmark-action ${isBookmarked ? 'active' : ''}`}
-                onClick={handleBookmark}
-              >
-                {isBookmarked ? '🔖 Bookmarked' : '🏷️ Bookmark'}
-              </button>
+              <div className="action-buttons">
+                <button
+                  className={`bookmark-action ${isBookmarked ? 'active' : ''}`}
+                  onClick={() => toggleBookmark(post.id)}
+                >
+                  {isBookmarked ? '🔖 Bookmarked' : '🏷️ Bookmark'}
+                </button>
+                {isMine && (
+                  <button className="danger-action" onClick={handleDelete}>🗑️ Delete</button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Comments section */}
         <div className="comments-section">
-          <h2>Comments ({post.comments.length})</h2>
+          <div className="comments-header">
+            <h2>{commentCount} Comments</h2>
+            <div className="sort-tabs small">
+              <button
+                className={`sort-tab ${commentSort === 'top' ? 'active' : ''}`}
+                onClick={() => setCommentSort('top')}
+              >
+                Top
+              </button>
+              <button
+                className={`sort-tab ${commentSort === 'new' ? 'active' : ''}`}
+                onClick={() => setCommentSort('new')}
+              >
+                New
+              </button>
+            </div>
+          </div>
 
-          {/* Add comment form */}
           <form onSubmit={handleAddComment} className="add-comment-form">
             <textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Share your thoughts..."
+              placeholder="Share your thoughts…"
               rows="4"
             />
-            <button type="submit" disabled={!commentText.trim()}>
-              Add Comment
-            </button>
+            <button type="submit" disabled={!commentText.trim()}>Add Comment</button>
           </form>
 
-          {/* Comments list */}
           <div className="comments-list">
-            {post.comments.length === 0 ? (
+            {sortedComments.length === 0 ? (
               <p className="no-comments">No comments yet. Be the first to comment!</p>
             ) : (
-              post.comments.map(comment => (
-                <Comment 
-                  key={comment.id} 
-                  comment={comment} 
-                  postId={post.id}
-                />
+              sortedComments.map(comment => (
+                <Comment key={comment.id} comment={comment} postId={post.id} />
               ))
             )}
           </div>

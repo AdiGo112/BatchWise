@@ -1,15 +1,15 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { 
-  currentUser, 
-  users, 
-  communities, 
-  companies, 
+import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
+import {
+  users,
+  communities,
+  companies,
   resources,
   initialPosts,
   getUserById,
   getCommunityById,
   getCompanyById
-} from '../data/mockData';
+} from '../data/Mockdata';
+import { useAuth } from './AuthContext.jsx';
 
 const AppContext = createContext();
 
@@ -21,190 +21,218 @@ export const useApp = () => {
   return context;
 };
 
+// Session state used to vanish on every refresh -- the README listed it as a
+// known limitation. It is a two-line hook, so it is not a limitation any more.
+function usePersistedState(key, initial) {
+  const [value, setValue] = useState(() => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : initial;
+    } catch {
+      return initial;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // Quota or private mode. Losing persistence is not worth crashing over.
+    }
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
+export const score = (item) => item.upvotes.length - (item.downvotes?.length ?? 0);
+
+// Reddit-style hot ranking: upvotes decay against age, so a 2-hour-old post
+// with 5 votes can outrank a week-old post with 20.
+const hotness = (post) => {
+  const ageHours = (Date.now() - new Date(post.createdAt)) / 3.6e6;
+  return score(post) / Math.pow(ageHours + 2, 1.5);
+};
+
+export const sortPosts = (posts, mode) => {
+  const ranked = [...posts];
+  if (mode === 'new') {
+    ranked.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  } else if (mode === 'top') {
+    ranked.sort((a, b) => score(b) - score(a));
+  } else {
+    ranked.sort((a, b) => hotness(b) - hotness(a));
+  }
+  // Pinned posts float regardless of sort mode.
+  return ranked.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+};
+
+// Applies `fn` to the comment with `commentId`, at either nesting level.
+const mapComments = (comments, commentId, fn) =>
+  comments.map(comment => {
+    const updated = comment.id === commentId ? fn(comment) : comment;
+    return {
+      ...updated,
+      replies: (updated.replies ?? []).map(r => (r.id === commentId ? fn(r) : r))
+    };
+  });
+
+// Toggle a vote in `dir` (1 or -1) for `userId`, clearing the opposite vote.
+export const applyVote = (item, userId, dir) => {
+  const up = new Set(item.upvotes);
+  const down = new Set(item.downvotes ?? []);
+  const target = dir === 1 ? up : down;
+  const other = dir === 1 ? down : up;
+
+  other.delete(userId);
+  if (target.has(userId)) target.delete(userId);
+  else target.add(userId);
+
+  return { ...item, upvotes: [...up], downvotes: [...down] };
+};
+
 export const AppProvider = ({ children }) => {
-  // State management
-  const [posts, setPosts] = useState(initialPosts);
-  const [joinedCommunities, setJoinedCommunities] = useState([1, 3]); // User has joined communities 1 and 3
-  const [bookmarkedPosts, setBookmarkedPosts] = useState([]);
+  const { user: currentUser } = useAuth();
 
-  // Toggle upvote on a post
-  const toggleUpvote = (postId) => {
-    setPosts(prevPosts => prevPosts.map(post => {
-      if (post.id === postId) {
-        const hasUpvoted = post.upvotes.includes(currentUser.id);
-        return {
-          ...post,
-          upvotes: hasUpvoted 
-            ? post.upvotes.filter(id => id !== currentUser.id)
-            : [...post.upvotes, currentUser.id]
-        };
-      }
-      return post;
+  // Namespaced per user so two accounts on one machine don't share bookmarks.
+  const ns = `batchwise:${currentUser?.id ?? 'guest'}`;
+  const [posts, setPosts] = usePersistedState(`${ns}:posts`, initialPosts);
+  const [joinedCommunities, setJoinedCommunities] = usePersistedState(`${ns}:communities`, [1, 3]);
+  const [bookmarkedPosts, setBookmarkedPosts] = usePersistedState(`${ns}:bookmarks`, []);
+  const [readAnnouncements, setReadAnnouncements] = usePersistedState(`${ns}:read`, []);
+
+  const userId = currentUser?.id;
+
+  const vote = useCallback((postId, dir) => {
+    setPosts(prev => prev.map(p => (p.id === postId ? applyVote(p, userId, dir) : p)));
+  }, [setPosts, userId]);
+
+  // Kept for callers that only ever upvote.
+  const toggleUpvote = useCallback((postId) => vote(postId, 1), [vote]);
+
+  const addComment = useCallback((postId, content, parentCommentId = null) => {
+    const newComment = {
+      id: Date.now(),
+      authorId: userId,
+      content,
+      createdAt: new Date().toISOString(),
+      upvotes: [],
+      downvotes: [],
+      parentCommentId,
+      replies: []
+    };
+
+    setPosts(prev => prev.map(post => {
+      if (post.id !== postId) return post;
+      if (!parentCommentId) return { ...post, comments: [...post.comments, newComment] };
+      // Reply: attach to its parent without mutating the existing comment
+      // objects (the old version mutated them in place, so React could miss it).
+      return {
+        ...post,
+        comments: post.comments.map(cm =>
+          cm.id === parentCommentId
+            ? { ...cm, replies: [...(cm.replies ?? []), newComment] }
+            : cm
+        )
+      };
     }));
-  };
+  }, [setPosts, userId]);
 
-  // Add comment to a post
-  const addComment = (postId, content, parentCommentId = null) => {
-    setPosts(prevPosts => prevPosts.map(post => {
-      if (post.id === postId) {
-        const newComment = {
-          id: Date.now(), // Simple unique ID
-          authorId: currentUser.id,
-          content,
-          createdAt: new Date().toISOString(),
-          upvotes: [],
-          parentCommentId,
-          replies: []
-        };
-
-        // If it's a reply to another comment
-        if (parentCommentId) {
-          const updatedComments = [...post.comments];
-          const parentComment = updatedComments.find(c => c.id === parentCommentId);
-          if (parentComment) {
-            parentComment.replies = [...(parentComment.replies || []), newComment];
-          }
-          return { ...post, comments: updatedComments };
-        }
-
-        // Top-level comment
-        return {
-          ...post,
-          comments: [...post.comments, newComment]
-        };
-      }
-      return post;
+  const deleteComment = useCallback((postId, commentId) => {
+    setPosts(prev => prev.map(post => {
+      if (post.id !== postId) return post;
+      return {
+        ...post,
+        comments: post.comments
+          .filter(cm => cm.id !== commentId)
+          .map(cm => ({ ...cm, replies: (cm.replies ?? []).filter(r => r.id !== commentId) }))
+      };
     }));
-  };
+  }, [setPosts]);
 
-  // Delete comment
-  const deleteComment = (postId, commentId) => {
-    setPosts(prevPosts => prevPosts.map(post => {
-      if (post.id === postId) {
-        // Check if it's a top-level comment
-        const isTopLevel = post.comments.some(c => c.id === commentId);
-        
-        if (isTopLevel) {
-          return {
-            ...post,
-            comments: post.comments.filter(c => c.id !== commentId)
-          };
-        }
+  const voteComment = useCallback((postId, commentId, dir) => {
+    setPosts(prev => prev.map(post =>
+      post.id === postId
+        ? { ...post, comments: mapComments(post.comments, commentId, cm => applyVote(cm, userId, dir)) }
+        : post
+    ));
+  }, [setPosts, userId]);
 
-        // It's a reply - find and remove from parent
-        const updatedComments = post.comments.map(comment => ({
-          ...comment,
-          replies: (comment.replies || []).filter(r => r.id !== commentId)
-        }));
+  const toggleCommentUpvote = useCallback(
+    (postId, commentId) => voteComment(postId, commentId, 1),
+    [voteComment]
+  );
 
-        return { ...post, comments: updatedComments };
-      }
-      return post;
-    }));
-  };
+  const toggleCommunityMembership = useCallback((communityId) => {
+    setJoinedCommunities(prev =>
+      prev.includes(communityId) ? prev.filter(id => id !== communityId) : [...prev, communityId]
+    );
+  }, [setJoinedCommunities]);
 
-  // Toggle upvote on a comment
-  const toggleCommentUpvote = (postId, commentId) => {
-    setPosts(prevPosts => prevPosts.map(post => {
-      if (post.id === postId) {
-        const updateCommentUpvotes = (comment) => {
-          if (comment.id === commentId) {
-            const hasUpvoted = comment.upvotes.includes(currentUser.id);
-            return {
-              ...comment,
-              upvotes: hasUpvoted
-                ? comment.upvotes.filter(id => id !== currentUser.id)
-                : [...comment.upvotes, currentUser.id]
-            };
-          }
-          return comment;
-        };
-
-        const updatedComments = post.comments.map(comment => {
-          const updated = updateCommentUpvotes(comment);
-          if (updated.replies) {
-            updated.replies = updated.replies.map(updateCommentUpvotes);
-          }
-          return updated;
-        });
-
-        return { ...post, comments: updatedComments };
-      }
-      return post;
-    }));
-  };
-
-  // Join/leave community
-  const toggleCommunityMembership = (communityId) => {
-    setJoinedCommunities(prev => {
-      if (prev.includes(communityId)) {
-        return prev.filter(id => id !== communityId);
-      }
-      return [...prev, communityId];
-    });
-  };
-
-  // Create a new post
-  const createPost = (postData) => {
+  const createPost = useCallback((postData) => {
     const newPost = {
       id: Date.now(),
       title: postData.title,
       content: postData.content,
-      authorId: currentUser.id,
-      communityId: postData.communityId || null,
-      companyId: postData.companyId || null,
+      authorId: userId,
+      communityId: postData.communityId ? Number(postData.communityId) : null,
+      companyId: postData.companyId ? Number(postData.companyId) : null,
       postType: postData.postType || 'Discussion',
-      upvotes: [],
+      upvotes: [userId], // you implicitly upvote your own post
+      downvotes: [],
       comments: [],
       createdAt: new Date().toISOString(),
       isPinned: false
     };
     setPosts(prev => [newPost, ...prev]);
     return newPost;
-  };
+  }, [setPosts, userId]);
 
-  // Toggle bookmark
-  const toggleBookmark = (postId) => {
-    setBookmarkedPosts(prev => {
-      if (prev.includes(postId)) {
-        return prev.filter(id => id !== postId);
-      }
-      return [...prev, postId];
-    });
-  };
+  const deletePost = useCallback((postId) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+  }, [setPosts]);
 
-  // Get post by ID
-  const getPostById = (id) => {
-    return posts.find(post => post.id === parseInt(id));
-  };
-
-  // Search functionality
-  const searchAll = (query) => {
-    const lowerQuery = query.toLowerCase();
-    
-    const postResults = posts.filter(post => 
-      post.title.toLowerCase().includes(lowerQuery) ||
-      post.content.toLowerCase().includes(lowerQuery)
+  const toggleBookmark = useCallback((postId) => {
+    setBookmarkedPosts(prev =>
+      prev.includes(postId) ? prev.filter(id => id !== postId) : [...prev, postId]
     );
+  }, [setBookmarkedPosts]);
 
-    const userResults = users.filter(user =>
-      user.name.toLowerCase().includes(lowerQuery)
-    );
+  // Post ids from seed data are ints; ids from createPost are Date.now().
+  // Compare loosely against the route param either way.
+  const getPostById = useCallback(
+    (id) => posts.find(post => String(post.id) === String(id)),
+    [posts]
+  );
 
-    const communityResults = communities.filter(community =>
-      community.name.toLowerCase().includes(lowerQuery) ||
-      community.description.toLowerCase().includes(lowerQuery)
-    );
+  const announcements = useMemo(
+    () => posts
+      .filter(p => p.postType === 'Announcement')
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+    [posts]
+  );
+
+  const unreadCount = announcements.filter(a => !readAnnouncements.includes(a.id)).length;
+
+  const markAnnouncementsRead = useCallback(() => {
+    setReadAnnouncements(announcements.map(a => a.id));
+  }, [announcements, setReadAnnouncements]);
+
+  const searchAll = useCallback((query) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return { posts: [], users: [], communities: [], companies: [], resources: [] };
+
+    const has = (...fields) => fields.some(f => f && String(f).toLowerCase().includes(q));
 
     return {
-      posts: postResults,
-      users: userResults,
-      communities: communityResults
+      posts: posts.filter(p => has(p.title, p.content)),
+      users: users.filter(u => has(u.name, u.bio, u.department)),
+      communities: communities.filter(c => has(c.name, c.description)),
+      companies: companies.filter(c => has(c.name)),
+      resources: resources.filter(r => has(r.title, r.description, r.category))
     };
-  };
+  }, [posts]);
 
   const value = {
-    // Data
     currentUser,
     users,
     communities,
@@ -213,21 +241,27 @@ export const AppProvider = ({ children }) => {
     posts,
     joinedCommunities,
     bookmarkedPosts,
-    
-    // Helper functions
+    announcements,
+    unreadCount,
+
     getUserById,
     getCommunityById,
     getCompanyById,
     getPostById,
-    
-    // Actions
+    score,
+    sortPosts,
+
+    vote,
     toggleUpvote,
     addComment,
     deleteComment,
+    voteComment,
     toggleCommentUpvote,
     toggleCommunityMembership,
     createPost,
+    deletePost,
     toggleBookmark,
+    markAnnouncementsRead,
     searchAll
   };
 

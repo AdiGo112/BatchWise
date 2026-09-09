@@ -1,26 +1,14 @@
-// Mock data for BatchWise prototype
+// Content data for BatchWise.
+// The user directory lives in Users.js and is re-exported here so existing
+// imports keep working -- there is exactly ONE list of users in the app now.
 
-// Current logged-in user
-export const currentUser = {
-  id: 1,
-  name: "Aditya",
-  role: "Student",
-  batch: 2027
-};
+import { users, getUserById } from './Users'
+export { users, getUserById }
 
-// Users database
-export const users = [
-  { id: 1, name: "Aditya", role: "Student", batch: 2027 },
-  { id: 2, name: "Rahul Mehta", role: "Alumni", batch: 2022 },
-  { id: 3, name: "Dr. Priya Sharma", role: "Faculty", batch: null },
-  { id: 4, name: "Ananya Reddy", role: "Student", batch: 2027 },
-  { id: 5, name: "Vikram Singh", role: "Alumni", batch: 2021 },
-  { id: 6, name: "Sneha Gupta", role: "Student", batch: 2026 },
-  { id: 7, name: "Arjun Patel", role: "Student", batch: 2025 },
-  { id: 8, name: "Priya Desai", role: "Student", batch: 2025 },
-  { id: 9, name: "Placement Committee", role: "Faculty", batch: null },
-  { id: 10, name: "Karthik Iyer", role: "Alumni", batch: 2023 }
-];
+// Seed timestamps are relative to page load, so "2 hours ago" and the
+// 3-day trending window stay true no matter when the demo is opened.
+const hoursAgo = (h) => new Date(Date.now() - h * 3600 * 1000).toISOString()
+
 
 // Communities
 export const communities = [
@@ -73,50 +61,42 @@ export const companies = [
   {
     id: 1,
     name: "Google",
-    logo: "🔍",
-    threadCount: 234
+    logo: "🔍"
   },
   {
     id: 2,
     name: "Microsoft",
-    logo: "🪟",
-    threadCount: 189
+    logo: "🪟"
   },
   {
     id: 3,
     name: "Amazon",
-    logo: "📦",
-    threadCount: 312
+    logo: "📦"
   },
   {
     id: 4,
     name: "Goldman Sachs",
-    logo: "💰",
-    threadCount: 156
+    logo: "💰"
   },
   {
     id: 5,
     name: "Meta",
-    logo: "👍",
-    threadCount: 198
+    logo: "👍"
   },
   {
     id: 6,
     name: "Apple",
-    logo: "🍎",
-    threadCount: 142
+    logo: "🍎"
   },
   {
     id: 7,
     name: "Netflix",
-    logo: "🎬",
-    threadCount: 87
+    logo: "🎬"
   },
   {
     id: 8,
     name: "Uber",
-    logo: "🚗",
-    threadCount: 134
+    logo: "🚗"
   }
 ];
 
@@ -127,7 +107,7 @@ export const resources = [
     title: "Striver's SDE Sheet",
     description: "180 most important DSA problems for interviews",
     category: "DSA",
-    url: "#",
+    url: "https://takeuforward.org/interviews/strivers-sde-sheet-top-coding-interview-problems/",
     upvotes: 1247
   },
   {
@@ -135,7 +115,7 @@ export const resources = [
     title: "NeetCode 150",
     description: "150 LeetCode problems covering all patterns",
     category: "DSA",
-    url: "#",
+    url: "https://neetcode.io/practice",
     upvotes: 892
   },
   {
@@ -143,7 +123,7 @@ export const resources = [
     title: "Resume Template - Software Engineer",
     description: "ATS-friendly resume template for tech roles",
     category: "Resume",
-    url: "#",
+    url: "https://www.overleaf.com/latex/templates/jakes-resume/syzfjbzwjncs",
     upvotes: 1534
   },
   {
@@ -151,7 +131,7 @@ export const resources = [
     title: "System Design Primer",
     description: "Complete guide to system design interviews",
     category: "Interview Prep",
-    url: "#",
+    url: "https://github.com/donnemartin/system-design-primer",
     upvotes: 2145
   },
   {
@@ -159,7 +139,7 @@ export const resources = [
     title: "Behavioral Interview Guide",
     description: "STAR method and common behavioral questions",
     category: "Interview Prep",
-    url: "#",
+    url: "https://www.themuse.com/advice/star-interview-method",
     upvotes: 678
   },
   {
@@ -167,7 +147,7 @@ export const resources = [
     title: "Salary Negotiation Guide",
     description: "How to negotiate your tech job offer",
     category: "Career",
-    url: "#",
+    url: "https://www.levels.fyi/",
     upvotes: 945
   }
 ];
@@ -183,8 +163,9 @@ export const initialPosts = [
     companyId: null,
     postType: "Announcement",
     upvotes: [2, 4, 5, 6, 7, 8],
+    downvotes: [],
     comments: [],
-    createdAt: "2026-01-30T10:00:00Z",
+    createdAt: hoursAgo(2),
     isPinned: true
   },
   {
@@ -196,8 +177,9 @@ export const initialPosts = [
     companyId: 1,
     postType: "Interview Experience",
     upvotes: [1, 4, 6, 7, 8, 10],
+    downvotes: [],
     comments: [],
-    createdAt: "2026-01-30T05:00:00Z",
+    createdAt: hoursAgo(5),
     isPinned: false
   },
   {
@@ -209,8 +191,9 @@ export const initialPosts = [
     companyId: null,
     postType: "Question",
     upvotes: [1, 2, 6, 8],
+    downvotes: [],
     comments: [],
-    createdAt: "2026-01-29T16:00:00Z",
+    createdAt: hoursAgo(9),
     isPinned: false
   },
   {
@@ -222,8 +205,9 @@ export const initialPosts = [
     companyId: 2,
     postType: "Question",
     upvotes: [1, 6],
+    downvotes: [],
     comments: [],
-    createdAt: "2026-01-29T12:00:00Z",
+    createdAt: hoursAgo(14),
     isPinned: false
   },
   {
@@ -235,8 +219,9 @@ export const initialPosts = [
     companyId: 3,
     postType: "Interview Experience",
     upvotes: [1, 4, 7, 8],
+    downvotes: [],
     comments: [],
-    createdAt: "2025-12-28T14:00:00Z",
+    createdAt: hoursAgo(20),
     isPinned: false
   },
   {
@@ -248,8 +233,9 @@ export const initialPosts = [
     companyId: null,
     postType: "Question",
     upvotes: [1, 2, 5, 6, 8],
+    downvotes: [],
     comments: [],
-    createdAt: "2026-01-28T10:00:00Z",
+    createdAt: hoursAgo(30),
     isPinned: false
   },
   {
@@ -261,8 +247,9 @@ export const initialPosts = [
     companyId: null,
     postType: "Announcement",
     upvotes: [1, 4, 6, 7, 8],
+    downvotes: [],
     comments: [],
-    createdAt: "2026-01-27T09:00:00Z",
+    createdAt: hoursAgo(44),
     isPinned: false
   },
   {
@@ -274,8 +261,9 @@ export const initialPosts = [
     companyId: 4,
     postType: "Question",
     upvotes: [1, 2, 5, 10],
+    downvotes: [],
     comments: [],
-    createdAt: "2026-01-27T07:00:00Z",
+    createdAt: hoursAgo(56),
     isPinned: false
   },
   {
@@ -287,8 +275,9 @@ export const initialPosts = [
     companyId: null,
     postType: "Discussion",
     upvotes: [2, 4, 6, 7, 8],
+    downvotes: [],
     comments: [],
-    createdAt: "2024-01-26T18:00:00Z",
+    createdAt: hoursAgo(26),
     isPinned: false
   },
   {
@@ -300,8 +289,9 @@ export const initialPosts = [
     companyId: 5,
     postType: "Interview Experience",
     upvotes: [1, 6, 7],
+    downvotes: [],
     comments: [],
-    createdAt: "2024-01-26T15:00:00Z",
+    createdAt: hoursAgo(70),
     isPinned: false
   },
   {
@@ -313,8 +303,9 @@ export const initialPosts = [
     companyId: null,
     postType: "Question",
     upvotes: [1, 6, 8],
+    downvotes: [],
     comments: [],
-    createdAt: "2024-01-25T11:00:00Z",
+    createdAt: hoursAgo(96),
     isPinned: false
   },
   {
@@ -326,17 +317,57 @@ export const initialPosts = [
     companyId: null,
     postType: "Announcement",
     upvotes: [1, 2, 4, 5, 6, 7, 8, 10],
+    downvotes: [],
     comments: [],
-    createdAt: "2024-01-25T08:00:00Z",
+    createdAt: hoursAgo(130),
     isPinned: true
   }
 ];
-
-// Helper function to get user by id
-export const getUserById = (id) => users.find(u => u.id === id);
 
 // Helper function to get community by id
 export const getCommunityById = (id) => communities.find(c => c.id === id);
 
 // Helper function to get company by id
 export const getCompanyById = (id) => companies.find(c => c.id === id);
+
+// A discussion platform that demos with zero comments sells itself short.
+// Seeded here rather than inline so the post array above stays readable.
+const seedComments = (postId, comments) => {
+  const post = initialPosts.find(p => p.id === postId);
+  if (post) post.comments = comments;
+};
+
+let seedId = 1000;
+const c = (authorId, content, hours, upvotes = [], replies = []) => ({
+  id: seedId++,
+  authorId,
+  content,
+  createdAt: hoursAgo(hours),
+  upvotes,
+  downvotes: [],
+  parentCommentId: null,
+  replies: replies.map(r => ({ ...r, parentCommentId: seedId - 1 }))
+});
+
+seedComments(2, [
+  c(1, "This is gold, thanks for writing it up. How long between the phone screen and round 2?", 4, [4, 6], [
+    { id: 900, authorId: 2, content: "About 8 days. They batch the onsite rounds, so it depends on the panel.", createdAt: hoursAgo(3), upvotes: [1], downvotes: [], replies: [] }
+  ]),
+  c(5, "Did they let you pick the language for the coding rounds?", 3, [1]),
+  c(4, "Topological sort shows up constantly at Google. Practice course schedule I and II.", 2, [1, 5, 7, 8])
+]);
+
+seedComments(4, [
+  c(6, "Take the offer with the better team, not the better number. The 2 LPA gap disappears after one switch.", 10, [1, 2, 5, 7, 9]),
+  c(10, "Agreed. Also check the on-call rotation before you sign anything.", 8, [1, 6])
+]);
+
+seedComments(6, [
+  c(9, "Saved. The system design primer link alone was worth it.", 6, [1, 3]),
+  c(3, "Adding to this: do mock interviews out loud. Reading solutions silently is not preparation.", 5, [1, 2, 5, 8, 9])
+]);
+
+seedComments(11, [
+  c(2, "Gaurav Sen for system design, and Exponent for PM and behavioural.", 100, [1, 4, 5]),
+  c(7, "Jeff Su has genuinely good behavioural interview content.", 90, [4])
+]);

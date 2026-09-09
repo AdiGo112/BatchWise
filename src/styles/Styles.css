@@ -11,21 +11,96 @@
 }
 
 :root {
-  --bg-primary: #dae0e6;
+  color-scheme: light;
+
+  --bg-primary: #f2f4f7;
   --bg-secondary: #ffffff;
-  --text-primary: #1c1c1c;
-  --text-secondary: #7c7c7c;
-  --text-tertiary: #a8a8a8;
-  --border-color: #ccc;
-  --border-light: #edeff1;
-  --accent-orange: #ff4500;
+  --bg-subtle: #f7f8fa;
+  --bg-hover: #eef1f5;
+  --bg-inset: #f3f4f6;
+
+  --text-primary: #16181c;
+  --text-secondary: #5c6773;
+  --text-tertiary: #8b95a1;
+
+  --border-color: #d9dee5;
+  --border-light: #e8ecf1;
+
   --accent-blue: #0079d3;
+  --accent-orange: #ff4500;
+  --accent-indigo: #4f46e5;
+  --danger: #dc2626;
+
   --upvote-color: #ff4500;
   --downvote-color: #7193ff;
-  --pin-color: #46d160;
+  --pin-color: #22a559;
+
   --student-color: #0079d3;
   --alumni-color: #ff4500;
-  --faculty-color: #46d160;
+  --faculty-color: #14874a;
+
+  /* Role and post-type chip backgrounds. Named so dark mode can restate
+     them once instead of every rule restating a hex. */
+  --chip-blue: #e1f0ff;
+  --chip-orange: #ffe4d6;
+  --chip-green: #e6ffed;
+  --chip-grey: #f0f0f0;
+  --chip-green-soft: #f6fffa;
+
+  --login-ink: #0f172a;
+  --login-muted: #cbd5f5;
+  --login-bg: linear-gradient(135deg, #eef2ff, #f8fafc);
+  --login-panel: linear-gradient(160deg, #1e293b, #0f172a);
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, .06);
+  --shadow-md: 0 4px 14px rgba(16, 24, 40, .08);
+  --shadow-lg: 0 20px 40px rgba(16, 24, 40, .12);
+  --radius: 10px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-primary: #0f1216;
+  --bg-secondary: #181c22;
+  --bg-subtle: #1e232b;
+  --bg-hover: #242a33;
+  --bg-inset: #232830;
+
+  --text-primary: #e7ebf0;
+  --text-secondary: #9aa5b1;
+  --text-tertiary: #6f7b88;
+
+  --border-color: #2c333d;
+  --border-light: #232830;
+
+  --accent-blue: #4aa3e8;
+  --accent-orange: #ff6a33;
+  --accent-indigo: #8b87f5;
+  --danger: #f87171;
+
+  --upvote-color: #ff6a33;
+  --downvote-color: #8fa8ff;
+  --pin-color: #3ddc84;
+
+  --student-color: #4aa3e8;
+  --alumni-color: #ff8c5a;
+  --faculty-color: #3ddc84;
+
+  --chip-blue: #14324d;
+  --chip-orange: #43220f;
+  --chip-green: #10331f;
+  --chip-grey: #262c34;
+  --chip-green-soft: #131f18;
+
+  --login-ink: #e7ebf0;
+  --login-muted: #9aa5b1;
+  --login-bg: linear-gradient(135deg, #0f1216, #181c22);
+  --login-panel: linear-gradient(160deg, #1e2530, #0b0e12);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, .45);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, .55);
 }
 
 body {
@@ -62,7 +137,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  background: var(--login-bg);
 }
 
 /* ---------- LOGIN CARD ---------- */
@@ -72,7 +147,7 @@ button {
   display: flex;
   border-radius: 16px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--bg-secondary);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
 }
 
@@ -80,8 +155,8 @@ button {
 .login-left {
   flex: 1;
   padding: 48px;
-  background: linear-gradient(160deg, #1e293b, #0f172a);
-  color: #ffffff;
+  background: var(--login-panel);
+  color: #ffffff; /* panel is dark in both themes */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -94,7 +169,7 @@ button {
 
 .login-left p {
   font-size: 16px;
-  color: #cbd5f5;
+  color: var(--login-muted);
   line-height: 1.6;
 }
 
@@ -110,7 +185,7 @@ button {
 .login-right h3 {
   font-size: 26px;
   margin-bottom: 24px;
-  color: #0f172a;
+  color: var(--login-ink);
 }
 
 /* ---------- INPUTS ---------- */
@@ -119,14 +194,14 @@ button {
   padding: 14px 16px;
   margin-bottom: 16px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   font-size: 15px;
   outline: none;
   transition: all 0.2s ease;
 }
 
 .login-right input:focus {
-  border-color: #6366f1;
+  border-color: var(--accent-indigo);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
@@ -139,7 +214,7 @@ button {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  background: #6366f1;
+  background: var(--accent-indigo);
   color: white;
   transition: all 0.25s ease;
 }
@@ -154,7 +229,7 @@ button {
   margin-top: -6px;
   margin-bottom: 12px;
   font-size: 14px;
-  color: #dc2626;
+  color: var(--danger);
 }
 
 /* ---------- RESPONSIVE ---------- */
@@ -196,7 +271,7 @@ button {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #2563eb;
+  background: var(--accent-blue);
   color: white;
   border: none;
   font-weight: bold;
@@ -414,7 +489,7 @@ button {
 }
 
 .nav-item.active {
-  background-color: #e9f5ff;
+  background-color: var(--chip-blue);
   color: var(--accent-blue);
   border-left: 3px solid var(--accent-blue);
   padding-left: 9px;
@@ -455,7 +530,7 @@ button {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   color: white;
   font-size: 32px;
   border: none;
@@ -489,7 +564,76 @@ button {
 }
 
 .fab-menu button:hover {
-  background: #f3f4f6;
+  background: var(--bg-inset);
+}
+
+.chat-page {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+.chat-list {
+  width: 260px;
+  border-right: 1px solid var(--border-color);
+  padding: 12px;
+}
+
+.chat-user {
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.chat-user.active {
+  background: var(--chip-blue);
+}
+
+.chat-user-name {
+  font-weight: 500;
+}
+
+.chat-user-meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.chat-message {
+  max-width: 60%;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+}
+
+.chat-message.me {
+  background: var(--accent-blue);
+  color: white;
+  margin-left: auto;
+}
+
+.chat-message.them {
+  background: var(--bg-inset);
+}
+
+.chat-input {
+  padding: 12px;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Center Feed */
@@ -530,7 +674,7 @@ button {
 
 .post-card.pinned {
   border-left: 4px solid var(--pin-color);
-  background-color: #f6fffa;
+  background-color: var(--chip-green-soft);
 }
 
 .vote-section {
@@ -601,7 +745,7 @@ button {
   font-weight: 600;
   color: var(--pin-color);
   padding: 2px 6px;
-  background-color: #e6ffed;
+  background-color: var(--chip-green);
   border-radius: 3px;
 }
 
@@ -616,22 +760,22 @@ button {
 }
 
 .post-tag.interview-experience {
-  background-color: #e1f0ff;
+  background-color: var(--chip-blue);
   color: var(--tag-interview);
 }
 
 .post-tag.question {
-  background-color: #ffe4d6;
+  background-color: var(--chip-orange);
   color: var(--tag-question);
 }
 
 .post-tag.announcement {
-  background-color: #e6ffed;
+  background-color: var(--chip-green);
   color: var(--tag-announcement);
 }
 
 .post-tag.discussion {
-  background-color: #f0f0f0;
+  background-color: var(--chip-grey);
   color: var(--tag-discussion);
 }
 
@@ -700,17 +844,17 @@ button {
 }
 
 .author-role-badge[data-role="student"] {
-  background-color: #e1f0ff;
+  background-color: var(--chip-blue);
   color: var(--student-color);
 }
 
 .author-role-badge[data-role="alumni"] {
-  background-color: #ffe4d6;
+  background-color: var(--chip-orange);
   color: var(--alumni-color);
 }
 
 .author-role-badge[data-role="faculty"] {
-  background-color: #e6ffed;
+  background-color: var(--chip-green);
   color: var(--faculty-color);
 }
 
@@ -1160,17 +1304,17 @@ button {
 }
 
 .comment-role-badge[data-role="student"] {
-  background-color: #e1f0ff;
+  background-color: var(--chip-blue);
   color: var(--student-color);
 }
 
 .comment-role-badge[data-role="alumni"] {
-  background-color: #ffe4d6;
+  background-color: var(--chip-orange);
   color: var(--alumni-color);
 }
 
 .comment-role-badge[data-role="faculty"] {
-  background-color: #e6ffed;
+  background-color: var(--chip-green);
   color: var(--faculty-color);
 }
 
@@ -1224,7 +1368,7 @@ button {
 }
 
 .comment-delete:hover {
-  background-color: #ffe4d6;
+  background-color: var(--chip-orange);
   color: var(--accent-orange);
 }
 
@@ -1782,17 +1926,17 @@ button {
 }
 
 .user-role-badge[data-role="student"] {
-  background-color: #e1f0ff;
+  background-color: var(--chip-blue);
   color: var(--student-color);
 }
 
 .user-role-badge[data-role="alumni"] {
-  background-color: #ffe4d6;
+  background-color: var(--chip-orange);
   color: var(--alumni-color);
 }
 
 .user-role-badge[data-role="faculty"] {
-  background-color: #e6ffed;
+  background-color: var(--chip-green);
   color: var(--faculty-color);
 }
 

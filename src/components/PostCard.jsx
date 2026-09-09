@@ -1,142 +1,111 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import '../styles/Styles.css';
+import VoteBar from './VoteBar';
+import { timeAgo } from '../utils';
 
 const PostCard = ({ post }) => {
   const navigate = useNavigate();
-
-  const { 
-    currentUser, 
-    toggleUpvote, 
-    getUserById, 
-    getCommunityById, 
+  const {
+    currentUser,
+    vote,
+    getUserById,
+    getCommunityById,
     getCompanyById,
     toggleBookmark,
-    bookmarkedPosts
+    bookmarkedPosts,
+    deletePost
   } = useApp();
 
   const author = getUserById(post.authorId);
   const community = post.communityId ? getCommunityById(post.communityId) : null;
   const company = post.companyId ? getCompanyById(post.companyId) : null;
 
-  const hasUpvoted = post.upvotes.includes(currentUser.id);
   const isBookmarked = bookmarkedPosts.includes(post.id);
+  const isMine = post.authorId === currentUser.id;
+  const commentCount = post.comments.reduce((n, c) => n + 1 + (c.replies?.length ?? 0), 0);
 
-  const goToPost = () => {
-    navigate(`/post/${post.id}`);
-  };
-
-  const handleUpvote = (e) => {
+  const stop = (fn) => (e) => {
     e.stopPropagation();
-    toggleUpvote(post.id);
+    e.preventDefault();
+    fn();
   };
 
-  const handleDownvote = (e) => {
-    e.stopPropagation();
-    if (post.postType !== 'Announcement') {
-      toggleUpvote(post.id);
-    }
-  };
-
-  const handleBookmark = (e) => {
-    e.stopPropagation();
-    toggleBookmark(post.id);
-  };
-
-  const goToCommunity = (e) => {
-    e.stopPropagation();
-    navigate(`/community/${community.id}`);
-  };
-
-  const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours} hours ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    return diffInDays === 1 ? '1 day ago' : `${diffInDays} days ago`;
-  };
+  const handleDelete = stop(() => {
+    if (window.confirm('Delete this post?')) deletePost(post.id);
+  });
 
   return (
-    <div
+    <article
       className={`post-card ${post.isPinned ? 'pinned' : ''}`}
-      onClick={goToPost}
-      role="button"
+      onClick={() => navigate(`/post/${post.id}`)}
+      onKeyDown={(e) => e.key === 'Enter' && navigate(`/post/${post.id}`)}
+      role="link"
+      tabIndex={0}
     >
-      {/* Vote section */}
-      <div className="vote-section">
-        <button
-          className={`vote-btn upvote ${hasUpvoted ? 'active' : ''}`}
-          onClick={handleUpvote}
-          aria-label="Upvote"
-        >
-          ▲
-        </button>
+      <VoteBar item={post} onVote={(dir) => vote(post.id, dir)} />
 
-        <div className="vote-score">{post.upvotes.length}</div>
-
-        <button
-          className="vote-btn downvote"
-          onClick={handleDownvote}
-          disabled={post.postType === 'Announcement'}
-          aria-label="Downvote"
-        >
-          ▼
-        </button>
-      </div>
-
-      {/* Post content */}
       <div className="post-content">
         <div className="post-header">
           {post.isPinned && <span className="pinned-badge">📌 Pinned</span>}
 
-          <span className={`post-tag ${post.postType.toLowerCase().replace(' ', '-')}`}>
+          <span className={`post-tag ${post.postType.toLowerCase().replace(/ /g, '-')}`}>
             {post.postType}
           </span>
 
-          {company && <span className="company-tag">{company.name}</span>}
+          {company && (
+            <Link to={`/company/${company.id}`} className="company-tag" onClick={e => e.stopPropagation()}>
+              {company.logo} {company.name}
+            </Link>
+          )}
 
           {community && (
-            <button className="community-tag" onClick={goToCommunity}>
+            <Link to={`/community/${community.id}`} className="community-tag" onClick={e => e.stopPropagation()}>
               {community.name}
-            </button>
+            </Link>
           )}
         </div>
 
         <h3 className="post-title">{post.title}</h3>
 
         <p className="post-preview">
-          {post.content.substring(0, 200)}
-          {post.content.length > 200 && '...'}
+          {post.content.slice(0, 200)}
+          {post.content.length > 200 && '…'}
         </p>
 
         <div className="post-footer">
           <div className="author-info">
-            <span className="author-name">{author.name}</span>
-            <span className="author-role-badge" data-role={author.role.toLowerCase()}>
-              {author.role}
+            {author?.avatar && <img className="avatar-xs" src={author.avatar} alt="" />}
+            <span className="author-name">{author?.name ?? 'Unknown'}</span>
+            <span className="author-role-badge" data-role={author?.role?.toLowerCase()}>
+              {author?.role}
             </span>
-            {author.batch && <span className="author-batch">Batch {author.batch}</span>}
+            {author?.batch && <span className="author-batch">Batch {author.batch}</span>}
           </div>
 
           <div className="post-meta">
-            <span>💬 {post.comments.length} comments</span>
-            <span>{formatTimeAgo(post.createdAt)}</span>
+            <span>💬 {commentCount}</span>
+            <span>{timeAgo(post.createdAt)}</span>
 
             <button
               className={`bookmark-btn ${isBookmarked ? 'active' : ''}`}
-              onClick={handleBookmark}
-              aria-label="Bookmark"
+              onClick={stop(() => toggleBookmark(post.id))}
+              aria-pressed={isBookmarked}
+              aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+              title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
             >
               {isBookmarked ? '🔖' : '🏷️'}
             </button>
+
+            {isMine && (
+              <button className="delete-btn" onClick={handleDelete} title="Delete post">
+                🗑️
+              </button>
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 
