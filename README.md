@@ -1,5 +1,7 @@
 # BatchWise
 
+[![CI](https://github.com/AdiGo112/BatchWise/actions/workflows/ci.yml/badge.svg)](https://github.com/AdiGo112/BatchWise/actions/workflows/ci.yml)
+
 A campus discussion and placement platform for students, alumni and the Training & Placement cell. React + React Router + plain CSS, no backend — all state lives in React Context and persists to `localStorage`.
 
 ## Quick start
