@@ -21,7 +21,7 @@
 
   --text-primary: #16181c;
   --text-secondary: #5c6773;
-  --text-tertiary: #8b95a1;
+  --text-tertiary: #6b7480; /* 4.6:1 on white */
 
   --border-color: #d9dee5;
   --border-light: #e8ecf1;
@@ -69,14 +69,14 @@
 
   --text-primary: #e7ebf0;
   --text-secondary: #9aa5b1;
-  --text-tertiary: #6f7b88;
+  --text-tertiary: #8b95a1; /* 5.6:1 on the dark card */
 
   --border-color: #2c333d;
   --border-light: #232830;
 
   --accent-blue: #4aa3e8;
   --accent-orange: #ff6a33;
-  --accent-indigo: #8b87f5;
+  --accent-indigo: #625df0; /* white text stays above 4.5:1 */
   --danger: #f87171;
 
   --upvote-color: #ff6a33;
@@ -206,7 +206,7 @@ button {
 }
 
 /* ---------- BUTTON ---------- */
-.login-right button {
+.login-right button[type="submit"] {
   margin-top: 10px;
   padding: 14px;
   border-radius: 10px;
@@ -219,7 +219,7 @@ button {
   transition: all 0.25s ease;
 }
 
-.login-right button:hover {
+.login-right button[type="submit"]:hover {
   background: #4f46e5;
   transform: translateY(-1px);
 }

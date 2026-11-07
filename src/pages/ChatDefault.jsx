@@ -85,6 +85,7 @@ export default function ChatDefault() {
         <input
           className="chat-search"
           placeholder="Search people…"
+          aria-label="Search people"
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
@@ -139,6 +140,7 @@ export default function ChatDefault() {
         <form className="chatdefault-input" onSubmit={send}>
           <input
             placeholder={`Message ${selected.name.split(" ")[0]}…`}
+            aria-label={`Message ${selected.name}`}
             value={draft}
             onChange={e => setDraft(e.target.value)}
           />

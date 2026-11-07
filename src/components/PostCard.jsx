@@ -98,7 +98,7 @@ const PostCard = ({ post }) => {
             </button>
 
             {isMine && (
-              <button className="delete-btn" onClick={handleDelete} title="Delete post">
+              <button className="delete-btn" onClick={handleDelete} title="Delete post" aria-label="Delete post">
                 🗑️
               </button>
             )}

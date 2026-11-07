@@ -26,6 +26,7 @@ const Resources = () => {
         <input
           className="inline-search"
           placeholder="Search resources…"
+          aria-label="Search resources"
           value={query}
           onChange={e => setQuery(e.target.value)}
         />

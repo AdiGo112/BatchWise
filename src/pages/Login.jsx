@@ -3,11 +3,22 @@ import { useAuth } from "../context/AuthContext.jsx"
 import { useNavigate } from "react-router-dom"
 
 // One-click logins. Judges and testers should not have to guess a password.
+// Demo-only credentials: there is no backend, and these accounts are public.
 const DEMO = [
   { label: "Student", identifier: "ved.hule@dypcoe.edu", password: "ved123", hint: "Ved Hule · Batch 2026" },
   { label: "Alumni", identifier: "rohan.j@dycoe.edu", password: "rohan123", hint: "Rohan Jadhav · Google" },
   { label: "TnP / Faculty", identifier: "amit.kulkarni@dycoe.edu", password: "tnp123", hint: "Placement dashboard" }
 ]
+
+// Clears everything this app stores (session, posts, chats, drives, theme) and
+// starts again from the seed data.
+const resetDemoData = () => {
+  if (!window.confirm("Reset all demo data in this browser to the seed data?")) return
+  Object.keys(localStorage)
+    .filter(k => k.startsWith("batchwise"))
+    .forEach(k => localStorage.removeItem(k))
+  window.location.reload()
+}
 
 export default function Login() {
   const [identifier, setIdentifier] = useState("")
@@ -37,7 +48,7 @@ export default function Login() {
   }
 
   return (
-    <div className="login-container">
+    <main className="login-container">
       <div className="login-card">
         <div className="login-left">
           <h2>🎓 BatchWise</h2>
@@ -87,6 +98,7 @@ export default function Login() {
 
           <div className="demo-logins">
             <span>Or try a demo account</span>
+            <p className="demo-note">Demo accounts — data stays in your browser.</p>
             <div className="demo-buttons">
               {DEMO.map(d => (
                 <button
@@ -100,9 +112,12 @@ export default function Login() {
                 </button>
               ))}
             </div>
+            <button type="button" className="demo-reset" onClick={resetDemoData}>
+              Reset demo data
+            </button>
           </div>
         </form>
       </div>
-    </div>
+    </main>
   )
 }

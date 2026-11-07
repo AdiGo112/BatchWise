@@ -49,7 +49,7 @@ export default function TnpDashboard() {
 
   return (
     <div className="tnp-shell">
-      <div className="tnp-dashboard">
+      <main className="tnp-dashboard">
         <header className="tnp-header">
           <div>
             <h1>Training &amp; Placement</h1>
@@ -79,7 +79,7 @@ export default function TnpDashboard() {
         </div>
 
         <div className="tnp-controls">
-          <select value={department} onChange={e => setDepartment(e.target.value)}>
+          <select aria-label="Department" value={department} onChange={e => setDepartment(e.target.value)}>
             {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
           </select>
 
@@ -114,7 +114,7 @@ export default function TnpDashboard() {
             ))}
           </div>
         )}
-      </div>
+      </main>
 
       {showAdd && (
         <AddJobModal

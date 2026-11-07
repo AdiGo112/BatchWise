@@ -46,7 +46,7 @@ function Layout() {
           {/* Tapping the dimmed area closes the mobile drawer. */}
           <div className="nav-scrim" onClick={() => setNavOpen(false)} />
 
-          <div className="content">
+          <main className="content">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/post/:id" element={<PostDetail />} />
@@ -67,7 +67,7 @@ function Layout() {
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </div>
+          </main>
         </div>
 
         <FloatingActionButton />

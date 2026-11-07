@@ -30,6 +30,7 @@ const Communities = () => {
         <input
           className="inline-search"
           placeholder="Search communities…"
+          aria-label="Search communities"
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
