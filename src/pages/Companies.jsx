@@ -29,6 +29,7 @@ const Companies = () => {
       <input
         className="inline-search"
         placeholder="Search companies…"
+        aria-label="Search companies"
         value={query}
         onChange={e => setQuery(e.target.value)}
       />

@@ -102,6 +102,7 @@ const Comment = ({ comment, postId, level = 0 }) => {
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder={`Reply to ${author?.name ?? 'this comment'}…`}
                   rows="3"
+                  aria-label={`Reply to ${author?.name ?? 'this comment'}`}
                   autoFocus
                 />
                 <div className="reply-form-actions">

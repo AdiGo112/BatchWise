@@ -153,6 +153,7 @@ const PostDetail = () => {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Share your thoughts…"
+              aria-label="Add a comment"
               rows="4"
             />
             <button type="submit" disabled={!commentText.trim()}>Add Comment</button>

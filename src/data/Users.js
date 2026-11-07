@@ -4,6 +4,9 @@
 //
 // accountType -> routing ("student" sees the feed, "tnp" sees the TnP dashboard)
 // role        -> display badge (Student / Alumni / Faculty)
+//
+// Passwords here are demo-only. Everything runs in the browser, so they are
+// public by design and must never be reused for a real account.
 
 export const users = [
   // ---------------- STUDENTS ----------------
